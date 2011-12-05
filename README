@@ -1,0 +1,14 @@
+README
+
+Project: Easy Rider
+
+This is code for the final project in the Fall 2011 Information Visualization
+cource offered by Kent State University. The class was led by Dr. Ye Zhao. The
+students involved on this project are:
+    James Baiera,
+    Jeremy Dobbins (author of this file),
+    Nathaniel Snyder.
+
+The project centers around a visualization of elevation and traffic data onto
+a Google Map inside a simple webpage.
+
