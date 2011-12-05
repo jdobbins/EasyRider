@@ -19,6 +19,11 @@
   </script>
 
   <script type="text/javascript">
+    //Global Script Variables
+    var markers = [];
+
+    var map = null;
+
     function initialize()
     {
       var latlng = new google.maps.LatLng(42.25, -71.85);
@@ -29,13 +34,90 @@
         mapTypeId: google.maps.MapTypeId.ROADMAP
       };
 
-      var map = new google.maps.Map(document.getElementById("map_canvas"),
+      map = new google.maps.Map(document.getElementById("map_canvas"),
         myOptions);
+
+      //Add a listener to respond to clicks on the map.
+      google.maps.event.addListener(
+          map
+        , 'click'
+        , function(event)
+          {
+            addMarker(event.latLng, true);
+          }
+        ) ;
+
+      //Add a listener to remove a marker with a double-click
+
     }
+
+    //Add a marker to the map. This has a limit as not to overflow the
+    //courtesy request limit offered by Google.
+    function addMarker(latlng, doQuery)
+    {
+      if (markers.length < 10)
+      {
+        var marker = new google.maps.Marker({
+            position: latlng
+          , map: map
+          , draggable: true
+          } );
+
+        google.maps.event.addListener(
+            marker
+          , 'dragend'
+          , function(e) {
+              updateElevation();
+            }
+          ) ;
+
+        markers.push(marker);
+
+        if (doQuery) {
+          updateElevation();
+        }
+
+        if (markers.length == 10) {
+          document.getElementById('address').disabled = true;
+        }
+      } else {
+        alert("No more than 10 points can be added");
+      }
+    }
+
+    //Call addAddress() if the Return key is pressed in the address field.
+    function addressKeyHandler(evt) {
+      var keycode;
+
+      if (window.event) {
+        keycode = window.event.keyCode;
+      } else if (evt) {
+        keycode = evt.which;
+      } else {
+        return true;
+      }
+
+      if (keycode == 13) {
+        addAddress();
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+
   </script>
  </head>
 
  <body onload="initialize()">
-  <div id="map_canvas" style="width:100%; height:100%"></div>
+  <div id="map_canvas"
+       style="border: 1px solid black; width:512px; height:400px"></div>
+
+  <p>Address: <input type="text"
+                     id="address"
+                     size="15"
+                     onkeypress="return addressKeyHandler(event)"/>
+  </p>
+
  </body>
 </html>
