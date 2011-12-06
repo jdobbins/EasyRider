@@ -1,41 +1,58 @@
 <!DOCTYPE html>
 
-<!-- easyrider.html
-     created 20111202
-  -->
+<!--
+ easyrider.html
+ created 20111202
+ by James Baiera, Jeremy Dobbins, Nathaniel Snyder
+ -->
 
 <html>
- <head>
-  <title>Easy Rider</title>
-  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<title>Easy Rider</title>
   <style type="text/css">
     html { height: 100% }
     body { height: 100%; marginl: 0; padding: 0 }
     #map_canvas { height: 100% }
   </style>
-
+  <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+  <script src="http://www.mapquestapi.com/sdk/js/v7.0.s/mqa.toolkit.js?key=Fmjtd%7Cluu2n168l9%2Crg%3Do5-haylh"></script>
   <script type="text/javascript"
     src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCC5EVLne7LJHdAVBnLY6Ve6gPku049fG8&sensor=false">
   </script>
 
   <script type="text/javascript">
     //Global Script Variables
+
+    var SAMPLES = 256;
     var markers = [];
+    var elevations = new Array(); //array for elevations
+
+    var els = null;
 
     var map = null;
 
-    function initialize()
-    {
-      var latlng = new google.maps.LatLng(42.25, -71.85);
+    var polyline = null;
 
+    var worcester = new google.maps.LatLng(42.24, -71.85);
+    var kent = new google.maps.LatLng(41.1537, -81.3579);
+
+    function initialize() {
       var myOptions = {
         zoom: 12,
-        center: latlng,
+        center: kent,
         mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
+      }
 
       map = new google.maps.Map(document.getElementById("map_canvas"),
         myOptions);
+
+      geocoderService = new google.maps.Geocoder();
+
+        //Create an ElevationService
+      elevator = new google.maps.ElevationService();
+
+      directionsService = new google.maps.DirectionsService();
 
       //Add a listener to respond to clicks on the map.
       google.maps.event.addListener(
@@ -48,6 +65,72 @@
         ) ;
 
       //Add a listener to remove a marker with a double-click
+
+        showTraffic();
+    }
+
+    function plotPath(results) {
+      els = results;
+
+      var path = [];
+
+      for (var i = 0; i < results.length; i++) {
+        path.push(els[i].location);
+      }
+
+      if (polyline) {
+        polyline.setMap(null);
+      }
+
+      polyline = new google.maps.Polyline( {
+        path: path,
+        strokeColor: "#00BB00",
+        map: map});
+
+    }
+
+    // Geocode an address and add a marker for the result
+    function addAddress() {
+      var address = document.getElementById("address").value;
+      geocoderService.geocode({ 'address': address }, function(results, status) {
+        document.getElementById('address').value = "";
+        if (status == google.maps.GeocoderStatus.OK) {
+          var latlng = results[0].geometry.location;
+          addMarker(latlng, true);
+          if (markers.length > 1) {
+            var bounds = new google.maps.LatLngBounds();
+            for (var i in markers) {
+              bounds.extend(markers[i].getPosition());
+            }
+            map.fitBounds(bounds);
+          } else {
+            map.fitBounds(results[0].geometry.viewport);
+          }
+        } else if (status == google.maps.GeocoderStatus.ZERO_RESULTS) {
+          alert("Address not found");
+        } else {
+          alert("Address lookup failed");
+        }
+      })
+    }
+
+
+    //Show Traffic
+    function showTraffic()
+    {
+//        var flowImage = new MQA.ImageOverlay();
+//        flowImage.setZIndex('traffic_flow');
+//        newURL = "http://www.mapquestapi.com/traffic/v1/flow?key=Fmjtd|luu2n168l9%2Crg%3Do5-haylh&projection=merc&mapLat=38.828712&mapLng=-77.036953&mapHeight=400&mapWidth=400&mapScale=108336"
+//        flowImage.setValue('imageURL', newURL);
+//        flowImage.setValue('imageOpacity', 0.6);
+
+//        var imageBounds = new google.maps.LatLngBounds(
+//          map.
+
+//        var trafficFlow = new google.maps.GroundOverlay(
+//          "http://www.mapquestapi.com/traffic/v1/flow?key=Fmjtd|luu2n168l9%2Crg%3Do5-haylh&projection=merc&mapLat=38.828712&mapLng=-77.036953&mapHeight=400&mapWidth=400&mapScale=108336"
+//          , map.getBounds());
+    
 
     }
 
@@ -68,14 +151,16 @@
             marker
           , 'dragend'
           , function(e) {
-              updateElevation();
+              updateElevationWithPath();
+              updateElevation(e.latlng);
             }
           ) ;
 
         markers.push(marker);
 
         if (doQuery) {
-          updateElevation();
+          updateElevationWithPath();
+          updateElevation(latlng);
         }
 
         if (markers.length == 10) {
@@ -106,6 +191,85 @@
       }
     }
 
+    //Update elevation array with new path.
+    function updateElevationWithPath() {
+      if (markers.length > 1) {
+         calcRoute();
+      } else {
+        var latlngs = [];
+        for (var i in markers) {
+          latlngs.push(markers[i].getPositions())
+        }
+        elevationService.getElevationAlongPath( {
+          path: latlngs,
+          samples: SAMPLES
+        }, plotPath);
+      }
+    }
+
+    function calcRoute(travelMode) {
+      var origin = markers[0].getPosition();
+      var destination = markers[markers.length - 1].getPosition();
+    
+      var waypoints = [];
+      for (var i = 1; i < markers.length - 1; i++) {
+        waypoints.push({
+          location: markers[i].getPosition(),
+          stopover: true
+        });
+      }
+    
+    var request = {
+      origin: origin,
+      destination: destination,
+      waypoints: waypoints,
+      travelMode: google.maps.DirectionsTravelMode.DRIVING
+    };
+
+    directionsService.route(request, function(response, status) {
+      if (status == google.maps.DirectionsStatus.OK) {
+        elevationService.getElevationAlongPath({
+          path: response.routes[0].overview_path,
+          samples: SAMPLES
+        }, plotPath);
+      } else if (status == google.maps.DirectionsStatus.ZERO_RESULTS) {
+        alert("Could not find a route between these points");
+      } else {
+        alert("Directions request failed");
+      }
+    });
+  }
+
+    //Update elevation array with new 
+    function updateElevation(Lalo) {
+
+      var locations = [];
+
+      // Retrieve the clicked location and push it on the array
+      locations.push(Lalo);
+
+      // Create a LocationElevationRequest object using the array's one value
+      var positionalRequest = {
+         'locations': locations
+      }
+
+      // Initiate the location request
+      elevator.getElevationForLocations(positionalRequest, function(results, status) {
+        if (status == google.maps.ElevationStatus.OK) {
+
+          // Retrieve the first result
+          if (results[0]) {
+            elevations.push(results[0].elevation);
+            drawChart();
+          } else {
+            alert("No results found");
+          }
+        } else {
+          alert("Elevation service failed due to: " + status);
+        }
+      
+      });
+    }
 
   </script>
 
@@ -118,12 +282,6 @@
     google.setOnLoadCallback(drawChart);
 
     function drawChart() {
-
-      var elevations=new Array(); 
-
-      elevations[0]=700;       
-      elevations[1]=500;
-      elevations[2]=550;
     
       var data = new google.visualization.DataTable();
 
