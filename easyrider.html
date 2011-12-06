@@ -58,7 +58,8 @@
       if (markers.length < 10)
       {
         var marker = new google.maps.Marker({
-            position: latlng
+            animation: google.maps.Animation.DROP
+          , position: latlng
           , map: map
           , draggable: true
           } );
@@ -81,7 +82,7 @@
           document.getElementById('address').disabled = true;
         }
       } else {
-        alert("No more than 10 points can be added");
+        alert("Only upto 10 markers can be added in this demo.");
       }
     }
 
@@ -107,6 +108,42 @@
 
 
   </script>
+
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+  <script type="text/javascript">
+    // Nate's script for elevation chart
+    // array elevations needs to be include elevations from marker clicks
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var elevations=new Array(); 
+
+      elevations[0]=700;       
+      elevations[1]=500;
+      elevations[2]=550;
+    
+      var data = new google.visualization.DataTable();
+
+      data.addColumn('number', 'position');
+      data.addColumn('number', 'elevation');
+
+      var i=0;
+
+      for (i=0; i < elevations.length; i++){
+        data.addRow([i, elevations[i]]);
+      }
+
+      var chart = new google.visualization.LineChart(
+        document.getElementById('chart_div'));
+
+      chart.draw(data, {colors:['black','red'], legend:'none'});
+    }
+
+    </script>
+
  </head>
 
  <body onload="initialize()">
@@ -119,5 +156,6 @@
                      onkeypress="return addressKeyHandler(event)"/>
   </p>
 
+  <div id="chart_div" style="width:512px"></div>
  </body>
 </html>
