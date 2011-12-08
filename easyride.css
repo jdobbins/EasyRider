@@ -12,7 +12,7 @@ body
     background-color: #E5E3DF;
     overflow-x: hidden;
     overflow-y: hidden;
-    left: 2.5%
+    left: 2.5%;
     margin-top: 10px;
     box-shadow: 10px 10px #888;
 }
@@ -32,7 +32,6 @@ body
 
 #chart_div
 {
-    border: 1px solid black;
     width: 95%;
     left: 2.5%;
     position: relative;

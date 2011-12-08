@@ -400,12 +400,9 @@
  </head>
 
  <body onload="initialize()">
-  <div id="map_canvas"
-       style="border: 1px solid black; width:100%; height:65%"></div>
+  <div id="map_canvas"></div>
 
-  <div id="chart_div" style="width:100%" onmouseout="clearMouseMarker()"></div>
-
-  <table style="width:100%;">
+  <table id="control_table">
     <tr>
       <td>Next Location:
           <input type="text"
@@ -419,6 +416,7 @@
     </tr>
   </table>
 
+  <div id="chart_div" onmouseout="clearMouseMarker()"></div>
 
  </body>
 </html>
