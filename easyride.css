@@ -9,12 +9,10 @@ body
     position: relative;
     width:95%;
     height: 60%;
-    background-color: #E5E3DF;
-    overflow-x: hidden;
-    overflow-y: hidden;
     left: 2.5%;
     margin-top: 10px;
-    box-shadow: 10px 10px #888;
+    box-shadow: 10px 10px #555;
+    border-radius: 0px 5px 5px 5px;
 }
 
 #control_table
@@ -22,17 +20,39 @@ body
     background : none repeat scroll 0 #888;
     position: relative;
     width: 50%;
-    margin-top: 15px;
     left: 25%;
     border: 1px solid black;
-    border-radius: 5px 5px 5px 5px;
+    border-radius: 0px 0px 5px 5px;
     padding: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
+    border-top: 1px solid white;
+    box-shadow: 10px 10px #555;
 }
 
 #chart_div
 {
+    background: white;
+    border: 1px solid black;
     width: 95%;
     left: 2.5%;
     position: relative;
+    box-shadow: 10px 10px #555;
+    border-radius: 5px 5px 5px 5px;
+    padding: 5px;
+}
+
+#address
+{
+    border: 1px solid #CCC;
+    border-radius: 10px 10px 10px 10px;
+    box-shadow: 0 0 4px #AAA inset;
+    padding: 5px;
+}
+
+input[type="button"]
+{
+    padding: 5px;
+    width: 75%;
+    font-weight: bold;
+    font-size: 14px;
 }
