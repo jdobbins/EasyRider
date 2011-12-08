@@ -32,13 +32,9 @@ body
 #chart_div
 {
     background: white;
-    border: 1px solid black;
     width: 95%;
     left: 2.5%;
     position: relative;
-    box-shadow: 10px 10px #555;
-    border-radius: 5px 5px 5px 5px;
-    padding: 5px;
 }
 
 #address
