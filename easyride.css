@@ -1,0 +1,39 @@
+body
+{
+    background: none repeat scroll 0px #BBB;
+}
+
+#map_canvas
+{
+    border: 1px solid black;
+    position: relative;
+    width:95%;
+    height: 60%;
+    background-color: #E5E3DF;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    left: 2.5%
+    margin-top: 10px;
+    box-shadow: 10px 10px #888;
+}
+
+#control_table
+{
+    background : none repeat scroll 0 #888;
+    position: relative;
+    width: 50%;
+    margin-top: 15px;
+    left: 25%;
+    border: 1px solid black;
+    border-radius: 5px 5px 5px 5px;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+#chart_div
+{
+    border: 1px solid black;
+    width: 95%;
+    left: 2.5%;
+    position: relative;
+}

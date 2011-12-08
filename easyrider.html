@@ -12,9 +12,9 @@
 <title>Easy Rider</title>
   <style type="text/css">
     html { height: 100% }
-    body { height: 100%; marginl: 0; padding: 0 }
+    body { height: 100%; margin: 0; padding: 0 }
     #map_canvas { height: 100% }
-  </style>
+  </style> <link rel="stylesheet" type="text/css" href="easyride.css"/>
   <script type="text/javascript" src="http://www.google.com/jsapi"></script>
   <script src="http://www.mapquestapi.com/sdk/js/v7.0.s/mqa.toolkit.js?key=Fmjtd%7Cluu2n168l9%2Crg%3Do5-haylh"></script>
   <script type="text/javascript"
@@ -31,21 +31,34 @@
     var els = null;
 
     var map = null;
+    var chart = null;
 
+    var mousemarker = null;
     var polyline = null;
 
     var worcester = new google.maps.LatLng(42.24, -71.85);
     var kent = new google.maps.LatLng(41.1537, -81.3579);
 
+//    google.load("visualization", "1", {packages: ["columnchart"]});
+    google.load("visualization", "1", {packages:["corechart"]});
+
+    google.setOnLoadCallback(initialize);
+
     function initialize() {
       var myOptions = {
-        zoom: 12,
+        zoom: 14,
         center: kent,
         mapTypeId: google.maps.MapTypeId.ROADMAP
       }
 
       map = new google.maps.Map(document.getElementById("map_canvas"),
         myOptions);
+
+      chart = new google.visualization.LineChart(
+        document.getElementById('chart_div'));
+
+//      chart = new google.visualization.ColumnChart(
+//        document.getElementById('chart_div'));
 
       geocoderService = new google.maps.Geocoder();
 
@@ -65,8 +78,27 @@
         ) ;
 
       //Add a listener to remove a marker with a double-click
+      google.visualization.events.addListener(
+          chart, 'onmouseover', function(e) {
+        if (mousemarker == null) {
+          mousemarker = new google.maps.Marker({
+            position: els[e.row].location,
+            map: map,
+  //        icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+          });
+        } else {
+          mousemarker.setPosition(els[e.row].location);
+        }
+      });
 
-        showTraffic();
+    }
+
+    // Remove the green rollover marker when the mouse leaves the chart
+    function clearMouseMarker() {
+      if (mousemarker != null) {
+        mousemarker.setMap(null);
+        mousemarker = null;
+      }
     }
 
     function plotPath(results) {
@@ -87,7 +119,26 @@
         strokeColor: "#00BB00",
         map: map});
 
+
+      var data = new google.visualization.DataTable();
+
+      data.addColumn('string', 'position');
+      data.addColumn('number', 'elevation');
+
+      for (var i = 0; i < results.length; i++){
+        data.addRow(['', els[i].elevation]);
+      }
+
+      document.getElementById('chart_div').style.display = 'block';
+      chart.draw(data,
+         {colors:['black','red'],
+          legend:'none',
+          titleY: 'Elevation (m)'});
     }
+
+
+//      drawChart();
+//    }
 
     // Geocode an address and add a marker for the result
     function addAddress() {
@@ -156,6 +207,13 @@
             }
           ) ;
 
+        google.maps.event.addListener(
+            marker
+          , 'click'
+          , function(evt) {
+              addCircle(evt.latlng)
+            });
+
         markers.push(marker);
 
         if (doQuery) {
@@ -170,6 +228,21 @@
         alert("Only upto 10 markers can be added in this demo.");
       }
     }
+
+    function addCircle(latlng) {
+      myCircleOptions = {
+        center: latlng,
+        radius: 50,
+        strokeColor: "#000000",
+        strokeWeight: 1,
+        fillColor: "#00FF00",
+        fillOpacity: 0.9,
+        map: map
+        };
+
+      var myCircle = new google.maps.Circle(myCircleOptions);
+    } 
+
 
     //Call addAddress() if the Return key is pressed in the address field.
     function addressKeyHandler(evt) {
@@ -198,9 +271,9 @@
       } else {
         var latlngs = [];
         for (var i in markers) {
-          latlngs.push(markers[i].getPositions())
+          latlngs.push(markers[i].getPosition())
         }
-        elevationService.getElevationAlongPath( {
+        elevator.getElevationAlongPath( {
           path: latlngs,
           samples: SAMPLES
         }, plotPath);
@@ -228,7 +301,7 @@
 
     directionsService.route(request, function(response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
-        elevationService.getElevationAlongPath({
+        elevator.getElevationAlongPath({
           path: response.routes[0].overview_path,
           samples: SAMPLES
         }, plotPath);
@@ -239,6 +312,22 @@
       }
     });
   }
+
+  // Clear all overlays, reset the array of points, and hide the chart
+  function reset() {
+    if (polyline) {
+      polyline.setMap(null);
+    }
+    
+    for (var i in markers) {
+      markers[i].setMap(null);
+    }
+    
+    markers = [];
+    
+    document.getElementById('chart_div').style.display = 'none';
+  }
+
 
     //Update elevation array with new 
     function updateElevation(Lalo) {
@@ -260,7 +349,6 @@
           // Retrieve the first result
           if (results[0]) {
             elevations.push(results[0].elevation);
-            drawChart();
           } else {
             alert("No results found");
           }
@@ -278,11 +366,13 @@
   <script type="text/javascript">
     // Nate's script for elevation chart
     // array elevations needs to be include elevations from marker clicks
-    google.load("visualization", "1", {packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
+
+//    google.load("visualization", "1", {packages:["corechart"]});
+
+//    google.setOnLoadCallback(drawChart);
 
     function drawChart() {
-    
+/*    
       var data = new google.visualization.DataTable();
 
       data.addColumn('number', 'position');
@@ -297,7 +387,12 @@
       var chart = new google.visualization.LineChart(
         document.getElementById('chart_div'));
 
-      chart.draw(data, {colors:['black','red'], legend:'none'});
+  //    document.getElementByID('chart_div').style.display = 'block';
+      chart.draw(data,
+         {colors:['black','red'],
+          legend:'none',
+          titleY: 'Elevation (m)'});
+ */
     }
 
     </script>
@@ -306,14 +401,24 @@
 
  <body onload="initialize()">
   <div id="map_canvas"
-       style="border: 1px solid black; width:512px; height:400px"></div>
+       style="border: 1px solid black; width:100%; height:65%"></div>
 
-  <p>Address: <input type="text"
-                     id="address"
-                     size="15"
-                     onkeypress="return addressKeyHandler(event)"/>
-  </p>
+  <div id="chart_div" style="width:100%" onmouseout="clearMouseMarker()"></div>
 
-  <div id="chart_div" style="width:512px"></div>
+  <table style="width:100%;">
+    <tr>
+      <td>Next Location:
+          <input type="text"
+                 id="address"
+                 size="15"
+                 onkeypress="return addressKeyHandler(event)"/>
+      </td>
+      <td style="text-align: right">
+        <input type="button" value="Clear all" onclick="reset()"/>
+      </td>
+    </tr>
+  </table>
+
+
  </body>
 </html>
